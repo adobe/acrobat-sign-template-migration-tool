@@ -46,7 +46,7 @@ const prodSettings: I_Settings = {
 	devPageLimit: -1
 };
 
-const stageSettings = prodSettings;
+const stageSettings = {...prodSettings}; // in general, {...x} is a deep copy of x
 stageSettings.apiEnv = "stage";
 
-export const Settings = devProdSettings;
+export const Settings = prodSettings;
