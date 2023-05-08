@@ -1,6 +1,26 @@
+/************************************************************************
+* 
+ * ADOBE CONFIDENTIAL 
+ * ___________________ 
+ * 
+ * Copyright [first year code created] Adobe 
+ * All Rights Reserved. 
+ * 
+ * NOTICE: All information contained herein is, and remains 
+ * the property of Adobe and its suppliers, if any. The intellectual 
+ * and technical concepts contained herein are proprietary to Adobe 
+ * and its suppliers and are protected by all applicable intellectual 
+ * property laws, including trade secret and copyright laws. 
+ * Dissemination of this information or reproduction of this material 
+ * is strictly forbidden unless prior written permission is obtained 
+ * from Adobe. 
+ 
+*************************************************************************
+*/
+
 import { Component, OnInit } from '@angular/core';
 import { OAuthService } from '../../services/oauth.service';
-import { Shared, SharedInner, SharerService } from '../../services/sharer.service';
+import { Shared, SharerService } from '../../services/sharer.service';
 import { Credentials } from '../../settings/credentials';
 import { Settings } from '../../settings/settings';
 import { loadUrl } from '../../util/electron-functions';
