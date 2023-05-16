@@ -1,28 +1,25 @@
 # sign-doc-reuploader
 
-This is a "migration tool" that copies selected documents from a specified commercial Adobe Sign account to a specified FedRAMP Adobe Sign account. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
+This is a "migration tool" that copies selected documents between Adobe Sign accounts. Both the "source" and "destination" accounts may either be a commercial Adobe Sign account or a FedRAMP Adobe Sign account. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
 
 This tool is currently in beta. Please open an issue for any bugs you find.
 
 ## Instructions for use
 
-### Setup: commercial account
+### Setup: source account
 
 1. Log-in to Sign and click on the "Account" tab.
-2. Search for "Access Tokens" in the left search bar and click on "Access Tokens".
-3. Click the plus sign to create an access token, and give it a name such as "migration-tool-access-token".
-4. Check the box next to `library_read` when creating the token.
-5. After you've created the token, click on it, then click "Integration Key", and copy the long randomly generated string. You will need this "commercial integration key" later when running the migration tool.
+2. Search for "API Applications" in the left search bar and then click on "API Applications".
+3. Click the plus sign to create an API Application. Give it a name and display name.
+4. Click on the row that coorresponds to the API Application and then click "Configure OAuth for Application".
+5. Check the box next to `library_read` and then "Save".
+6. Again click on the row that coorresponds to the API Application, click "View/Edit", and then make note of the client ID and client secret.
 
-### Setup: FedRAMP account
+### Setup: destination account
 
 First, log in to your FedRAMP account to ensure that you can indeed log in. After the migration process executes, it's necessary to log into the FedRAMP account to check that documents were correctly migrated.
 
 Receive the "FedRAMP client ID" and "Fed RAMP client secret" for said API Application from Professional Services. The API token will have the `library_write` scope enabled.
-
-### Using the app
-
-To use the app, download either Sign.Template.Migrator.Windows.zip or Sign.Template.Migrator.Mac.zip from the [releases](https://github.com/rossgk2/sign-doc-reuploader/releases) section of this repository, extract the folder inside the .zip file from the .zip, and double click the .exe (Windows) or .dmg (Mac) executable. The executable (the .exe or .dmg) must be kept inside the folder it resides in; if it is moved outside of this folder it will not work. 
 
 ### Optional: building the app manually
 
