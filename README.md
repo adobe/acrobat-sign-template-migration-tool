@@ -1,6 +1,6 @@
 # sign-doc-reuploader
 
-This is a "migration tool" that copies selected documents between Adobe Sign accounts. Both the "source" and "destination" accounts may either be a commercial Adobe Sign account or a FedRAMP Adobe Sign account. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
+This is a "migration tool" that copies selected documents between Adobe Sign accounts. Both the "source" and "destination" accounts may either be a commercial Adobe Sign account or a FedRAMP Adobe Sign account. Both accounts may either be hosted on any shard. The most common use case is the copying of *all* documents over from a commercial account to a FedRAMP account.
 
 This tool is currently in beta. Please open an issue for any bugs you find.
 
@@ -8,12 +8,12 @@ This tool is currently in beta. Please open an issue for any bugs you find.
 
 ### Setup: source account
 
-1. Log-in to Sign and click on the "Account" tab.
-2. Search for "API Applications" in the left search bar and then click on "API Applications".
+1. Log-in to Sign with an account that is an Account admin. (This is necessary in order for the account to have read access to all of the templates that are to be migrated.) Creation of a temporary account with Account admin status may be necessary for this purpose.
+2. Click on the "Account" tab. Search for "API Applications" in the left search bar and then click on "API Applications".
 3. Click the plus sign to create an API Application. Give it a name and display name.
-4. Click on the row that coorresponds to the API Application and then click "Configure OAuth for Application".
+4. Click on the row that corresponds to the API Application and then click "Configure OAuth for Application".
 5. Check the box next to `library_read` and then "Save".
-6. Again click on the row that coorresponds to the API Application, click "View/Edit", and then make note of the client ID and client secret.
+6. Again click on the row that corresponds to the API Application, click "View/Edit", and then make note of the client ID and client secret.
 
 ### Setup: destination account
 
