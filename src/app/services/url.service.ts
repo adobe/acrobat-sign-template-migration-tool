@@ -94,6 +94,13 @@ export class UrlService {
       return '/api/v1/token';
   }
 
+  getOAuthRefreshRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
+    if (complianceLevel === 'commercial')
+      return '/oauth/v2/refresh';
+    else // complianceLevel === 'fedramp'
+      return '/oauth/v2/token';
+  }
+
   getQueryParams(url: string): {[key: string]: any} {
     const queryParamString = url.substring(url.indexOf("?"));
     const tree: UrlTree = this.serializer.parse(queryParamString);

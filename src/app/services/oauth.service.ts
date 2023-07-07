@@ -136,7 +136,7 @@ export class OAuthService {
   clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     let requestConfig: any = {
       'method': 'post',
-      'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthTokenRequestEndpoint(complianceLevel),
+      'url': this.urlService.getOAuthBaseUri(shard, complianceLevel) + this.urlService.getOAuthRefreshRequestEndpoint(complianceLevel),
       'headers': {'Content-Type': 'application/x-www-form-urlencoded'}
     };
 
@@ -150,9 +150,9 @@ export class OAuthService {
     };
 
     if (complianceLevel === 'commercial')
-      requestConfig.data = args; // request body
+      requestConfig.data = args; // pass args in request body
     else // complianceLevel === 'fedramp'
-      requestConfig.params = args; // query params
+      requestConfig.params = args; // pass args as query params
 
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
@@ -164,15 +164,18 @@ export class OAuthService {
       if (complianceLevel === 'commercial')
         return 'library_read:account';
       else { // complianceLevel == 'fedramp'
-        /* 'offline_access' is crucial. Instructs the POST to /token in getToken() to return a refresh token. */
         return 'library_read';
       }
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
-        return 'library_read:account library_write:account';
+        return 'library_write:account';
       else // complianceLevel === 'fedramp'
-        return 'library_read library_write offline_access';
+        /* If permissions cooresponding to {the scope string returned by this function} are granted 
+        by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
+        Refresh tokens cannot be requested in the FedRAMP environment unless this 'offline_access' has been
+        approved by the server. */
+        return 'library_write offline_access';
     }
   }
 
