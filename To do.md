@@ -1,5 +1,8 @@
 # To do
 
+- clear cache after first login occurs so that FedRAMP -> FedRAMP migration works
+  - https://stackoverflow.com/a/58659476
+
 - initialize `sourceComplianceLevel` and `destComplianceLevel` to the default values that are used in the .html instead of hardcoding their initial values to match those from the .html
 
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable
