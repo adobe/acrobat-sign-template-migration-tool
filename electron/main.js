@@ -114,6 +114,12 @@ app.whenReady().then(function() {
     redirectUrls.push(details.url); // the URL that OAuth redirects us to
     console.log('redirectUrls', redirectUrls);
     redirected = true;
+    
+    /* Clear cookies before redirecting. If we don't do this, then when we log into the second account,
+    the login cookie from the first account will be used, and the second login will thus be erroneously ignored. */
+    mainWindow.webContents.session.clearStorageData({storages: ['cookies']}); // using no arguments seems like it should work, but it causes an error
+
+    /* Cancel the redirect and manually load index.html. */
     const currentWindow = BrowserWindow.getFocusedWindow();
     configLoadRendererAfterDOMContentLoaded(currentWindow);
     callback({ cancel: true });
