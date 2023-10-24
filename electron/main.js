@@ -22,6 +22,8 @@ const {app, BrowserWindow, ipcMain, session} = require('electron');
 const url = require("url");
 const path = require("path");
 const axios = require("axios").default;
+const https = require('https');
+axios.defaults.httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 /* Functions to be exposed to renderer via preload.js. */
 

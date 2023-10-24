@@ -34,7 +34,7 @@ import { UrlService } from 'src/app/services/url.service';
   templateUrl: './migration-console.component.html',
   styleUrls: ['./migration-console.component.scss']
 })
-export class MigrationConsoleComponent {
+export class MigrationConsoleComponent { 
   /* Reactive forms. */
 
   migrationToolForm = this.formBuilder.group(
@@ -181,11 +181,13 @@ export class MigrationConsoleComponent {
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
+      console.log('sourceBearerToken ', oldThis.sourceBearerToken);
 
       /* Do the same with the destRedirectUrl. */
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
+      console.log('destBearerToken ', oldThis.destBearerToken);
     });
   }
 

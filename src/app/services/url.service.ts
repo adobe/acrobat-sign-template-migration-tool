@@ -37,7 +37,7 @@ export class UrlService {
     the account is on; we use an API call to determine the return value. */
     if (complianceLevel === 'commercial') {
       if (bearerToken === '')
-        throw new Error('The empty string was passed as the "bearerAuth" argument in a call to getApiBaseUri().');      
+        throw new Error('The empty string was passed as the "bearerToken" argument in a call to getApiBaseUri().');      
       
       const requestConfig = {
         'method': 'get',
