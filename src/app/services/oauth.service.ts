@@ -162,14 +162,14 @@ export class OAuthService {
   getOAuthScopeString(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp'): string {
     if (sourceOrDest === 'source') {
       if (complianceLevel === 'commercial')
-        return 'library_read:account';
+        return 'library_read:self';
       else { // complianceLevel == 'fedramp'
         return 'library_read';
       }
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
-        return 'library_write:account';
+        return 'library_write:self';
       else // complianceLevel === 'fedramp'
         /* If permissions cooresponding to {the scope string returned by this function} are granted 
         by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
