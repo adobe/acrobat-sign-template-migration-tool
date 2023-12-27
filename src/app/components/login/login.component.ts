@@ -52,8 +52,8 @@ import { UrlService } from 'src/app/services/url.service';
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
   _sourceComplianceLevel: string = 'commercial'; // hardcoded for now; later, use Reactive Forms to pull initial value from .html
-  get sourceComplianceLevel(): 'commercial' | 'gov' {
-    return this._sourceComplianceLevel as 'commercial' | 'gov';
+  get sourceComplianceLevel(): 'commercial' | 'gov-stage' | 'gov-prod' {
+    return this._sourceComplianceLevel as 'commercial' | 'gov-stage' | 'gov-prod';
   }
 
   _sourceOAuthClientId: string = '';
@@ -84,13 +84,13 @@ export class LoginComponent implements OnInit {
   get sourceShard(): string {
     if (this.sourceComplianceLevel === 'commercial')
       return this._sourceShard;
-    else // this.sourceComplianceLevel === 'gov'
+    else // this.sourceComplianceLevel.includes('gov')
       return 'na1'; // there is currently only one shard for all gov accounts
   }
 
   _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
-  get destComplianceLevel(): 'commercial' | 'gov' {
-    return this._destComplianceLevel as 'commercial' | 'gov';
+  get destComplianceLevel(): 'commercial' | 'gov-stage' | 'gov-prod' {
+    return this._destComplianceLevel as 'commercial' | 'gov-stage' | 'gov-prod';
   }
 
   _destOAuthClientId: string = '';
@@ -121,7 +121,7 @@ export class LoginComponent implements OnInit {
   get destShard(): string {
     if (this.destComplianceLevel === 'commercial')
       return this._destShard;
-    else // this.destComplianceLevel === 'gov'
+    else // this.destComplianceLevel.includes('gov')
       return 'na1'; // there is currently only one shard for all gov accounts
   }
 
@@ -142,7 +142,7 @@ export class LoginComponent implements OnInit {
     this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail, this.destShard);
   }
 
-  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
+  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, shard, oAuthClientId, Settings.redirectUri, loginEmail);
 

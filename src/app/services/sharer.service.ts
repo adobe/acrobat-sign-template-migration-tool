@@ -22,7 +22,7 @@ import { Injectable } from '@angular/core';
 
 /* The type of the object to be shared. */
 export class SharedInner {
-  complianceLevel: 'commercial' | 'gov' = 'commercial';
+  complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod' = 'commercial';
   initialOAuthState = '';
   credentials = {
     oAuthClientId: '',

@@ -44,7 +44,7 @@ export class OAuthService {
       - env must be such that env.toLowerCase() is either 'commercial' or 'gov'
   */
   
-  getOAuthGrantRequest(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov',
+  getOAuthGrantRequest(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod',
     shard = '', clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
     const state = getRandomId();
     const scope = this.getOAuthScopeString(sourceOrDest, complianceLevel);
@@ -104,7 +104,7 @@ export class OAuthService {
       throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
-  async getToken(complianceLevel: 'commercial' | 'gov', shard = '', clientId: string,
+  async getToken(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', shard = '', clientId: string,
                  clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     
     let requestConfig: any = {
@@ -125,14 +125,14 @@ export class OAuthService {
 
     if (complianceLevel === 'commercial')
       requestConfig.data = args; // request body
-    else // complianceLevel === 'gov'
+    else // complianceLevel.includes('gov')
       requestConfig.params = args; // query params
 
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
-  async refreshToken(complianceLevel: 'commercial' | 'gov', shard = '', 
+  async refreshToken(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', shard = '', 
   clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     let requestConfig: any = {
       'method': 'post',
@@ -151,7 +151,7 @@ export class OAuthService {
 
     if (complianceLevel === 'commercial')
       requestConfig.data = args; // pass args in request body
-    else // complianceLevel === 'gov'
+    else // complianceLevel.includes('gov')
       requestConfig.params = args; // pass args as query params
 
     const response = (await httpRequest(requestConfig));
@@ -159,18 +159,18 @@ export class OAuthService {
   }
 
   /* Helper functions. */
-  getOAuthScopeString(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov'): string {
+  getOAuthScopeString(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod'): string {
     if (sourceOrDest === 'source') {
       if (complianceLevel === 'commercial')
         return 'library_read:self';
-      else { // complianceLevel == 'gov'
+      else { // complianceLevel.includes('gov')
         return 'library_read';
       }
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
         return 'library_write:self';
-      else // complianceLevel === 'gov'
+      else // complianceLevel.includes('gov')
         /* If permissions cooresponding to {the scope string returned by this function} are granted 
         by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
         Refresh tokens cannot be requested in the gov environment unless this 'offline_access' has been
