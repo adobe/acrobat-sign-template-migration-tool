@@ -124,13 +124,13 @@ export class MigrationConsoleComponent {
   destRefreshToken = '';
 
   /* Fields input by user. */
-  sourceComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  sourceComplianceLevel: 'commercial' | 'gov' = 'commercial';
   sourceOAuthClientId: string = '';
   sourceOAuthClientSecret: string = '';
   sourceLoginEmail: string = '';
   sourceShard: string = '';
 
-  destComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  destComplianceLevel: 'commercial' | 'gov' = 'commercial';
   destOAuthClientId: string = '';
   destOAuthClientSecret: string = '';
   destLoginEmail: string = '';

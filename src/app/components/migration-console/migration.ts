@@ -119,7 +119,9 @@ async function download(oldThis: any, documentId: string): Promise<any> {
 }
 
 async function upload(oldThis: any, docName: string, formFields: {[key: string]: string}, pdfBlob: Blob, documentId: string) {
+  oldThis.logToConsole('About to obtain baseUri.');
   const baseUri = await oldThis.urlService.getApiBaseUri(oldThis.destBearerToken, oldThis.destComplianceLevel);
+  oldThis.logToConsole('About to form "defaultHeaders" object.');
   const defaultHeaders = {'Authorization': `Bearer ${oldThis.destBearerToken}`};
 
   oldThis.logToConsoleTabbed(`About to upload the downloaded PDF to the destination 

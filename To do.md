@@ -4,7 +4,7 @@
 
 - type arguments with types such as `'option1' | 'option2'` in functions where applicable
 
-  - e.g. `complianceLevel` should always be of type `'commercial' | 'fedramp'`
+  - e.g. `complianceLevel` should always be of type `'commercial' | 'gov'`
 
 - remove need for direct call to axios (sending `data` with `JSON.stringify()` and then deserializing with `JSON.parse()` should probably work)
 

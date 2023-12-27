@@ -28,7 +28,7 @@
       <label for="source-compliance-level">Source compliance level</label>
       <select name="sourceComplianceLevel" id="source-compliance-level" (change) = "_sourceComplianceLevel = getValue($event)">
         <option value = "commercial">Commercial</option>
-        <option value = "fedramp">FedRamp</option>
+        <option value = "gov">Government</option>
       </select>
 
       <select name="shard" id="shard" (change) = "_sourceShard = getValue($event)" *ngIf="sourceComplianceLevel === 'commercial'">
@@ -52,7 +52,7 @@
       <label for="dest-compliance-level">Dest compliance level</label>
       <select name="destComplianceLevel" id="dest-compliance-level" (change) = "_destComplianceLevel = getValue($event)">
         <option value = "commercial">Commercial</option>
-        <option value = "fedramp">FedRamp</option>
+        <option value = "gov">Government</option>
       </select>
 
       <select name="shard" id="shard" (change) = "_destShard = getValue($event)" *ngIf="destComplianceLevel === 'commercial'">
