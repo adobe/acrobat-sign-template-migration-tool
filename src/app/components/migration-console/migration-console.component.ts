@@ -51,9 +51,9 @@ export class MigrationConsoleComponent {
 
   populateDocForm(libraryDocuments: any[]) {
     this.readyForDownload = true; // causes the "Begin upload" button to appear
-    libraryDocuments.forEach(template => {
+    libraryDocuments.forEach(doc => {
       const documentForm = this.formBuilder.group({
-        name: [template.name],
+        name: [doc.name],
         isSelected: [false]
       });
       this.documents.push(documentForm);
@@ -98,9 +98,9 @@ export class MigrationConsoleComponent {
       else
         done = true;
 
-      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the commercial account.`);
+      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the source account.`);
     }
-    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
+    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the source account.`)
 
     /* Initalize documentIds. */
     const oldThis: MigrationConsoleComponent = this;

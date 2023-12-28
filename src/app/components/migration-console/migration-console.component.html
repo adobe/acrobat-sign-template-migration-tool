@@ -20,7 +20,7 @@
 <form [formGroup]="migrationToolForm">
 	<div class="flex-container">
 		<div id="document-list-container" *ngIf="true">
-		    <button (click)="getDocumentList()"> Display documents from your commercial Sign account </button>
+		    <button (click)="getDocumentList()"> Display documents from the source account </button>
 		    <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
 		      <div class="document-row" [formGroup]="group">
 		        <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
