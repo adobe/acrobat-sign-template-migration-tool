@@ -16,7 +16,7 @@ else { // complianceLevel.includes('gov')
 }
 ```
 
-Then, copy-paste this code and put it in-between the code blocks commented by`a` and `b` in`migration-console.component.ts`:
+Then, copy-paste this code and put it in-between the code blocks commented by `/* Initalize documentIds. */` and `/* Set up the FormArray that will be used to display the list of documents to the user. */` in `migration-console.component.ts`:
 
 ```typescript
 for (const doc of oldThis.documentIds) {
