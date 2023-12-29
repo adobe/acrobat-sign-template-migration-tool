@@ -20,9 +20,11 @@
 <form [formGroup]="migrationToolForm">
 	<div class="flex-container">
 		<div id="document-list-container" *ngIf="true">
-		    <button (click)="getDocumentList()"> Display documents from the source account </button>
+		    <button (click)="getDocumentList('')"> Display documents from the source account </button>
+			<input placeholder="Template owner" (input) = "_owner = getValue($event)">
+			<button (click)="getDocumentList(_owner)">Filter by template owner</button>
 		    <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
-		      <div class="document-row" [formGroup]="group">
+				<div class="document-row" [formGroup]="group">
 		        <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
 		        <input formControlName="name" placeholder="document name" readonly>
 		      </div>
@@ -41,5 +43,5 @@
 	    <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
 	</div>
 
-	<button type="submit" *ngIf="readyForDownload" (click) = "migrate()">Begin upload</button>
+	<button type="submit" *ngIf="_readyForDownload" (click) = "migrate()">Begin upload</button>
 </form>

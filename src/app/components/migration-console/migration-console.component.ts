@@ -47,10 +47,16 @@ export class MigrationConsoleComponent {
     return this.migrationToolForm.controls['documents'] as FormArray;
   }
 
-  readyForDownload: boolean = false;
+  set documents(value: FormArray) {
+    this.migrationToolForm.controls['documents'] = value;
+  }
+
+  _owner: string = '';
+  _readyForDownload: boolean = false;
 
   populateDocForm(libraryDocuments: any[]) {
-    this.readyForDownload = true; // causes the "Begin upload" button to appear
+    this._readyForDownload = true; // causes the "Begin upload" button to appear
+    this.documents = this.formBuilder.array([]); // clear documents of existing entries before pushing to it
     libraryDocuments.forEach(doc => {
       const documentForm = this.formBuilder.group({
         name: [doc.name],
@@ -72,7 +78,7 @@ export class MigrationConsoleComponent {
     this.logToConsole(tab() + message);
   }
 
-  async getDocumentList(): Promise<any> {
+  async getDocumentList(owner: string): Promise<any> {
     const baseUrl = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
 
     /* Get all library documents. */
@@ -82,6 +88,7 @@ export class MigrationConsoleComponent {
     let cursorQueryString = '';
     let done = false;
     for (let i = 1; !done; i ++) {
+      /* Get the library documents from the current page. */
       const requestConfig = {
         'method': 'get',
         'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
@@ -89,10 +96,15 @@ export class MigrationConsoleComponent {
       };
       response = (await httpRequest(requestConfig));
       
-      const filteredNewDocs = response.libraryDocumentList.filter(function(doc: any) { return doc.ownerEmail === 'per06434@signgovdevtestorg1.com'; });
-      libraryDocuments = libraryDocuments.concat(filteredNewDocs);
-      console.log(`PAGE ${i}`);
-      console.log(libraryDocuments);
+      /* Add the library documents from the current page, filtering if necessary, to the libraryDocuments array. */
+      let newDocs: any[];
+      if (owner !== '')
+        newDocs = response.libraryDocumentList.filter(function(doc: any) { return doc.ownerEmail === owner; });
+      else
+        newDocs = response.libraryDocumentList;
+      libraryDocuments = libraryDocuments.concat(newDocs);
+      
+      /* Advance the cursor to the next page. If there is no next page, we're done. */
       const cursor = response.page.nextCursor;
       if (cursor !== undefined) {
         cursorQueryString = `&cursor=${cursor}`;
@@ -216,5 +228,10 @@ export class MigrationConsoleComponent {
   when requestConfig is passed from httpRequest() to the axios() call in electron/main.ts. */
   async httpRequestTemp(requestConfig: any): Promise<any> {
     return (await axios(requestConfig)).data;
+  }
+
+  /* Helper function used in migration-console.component.html. */
+  getValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
   }
 }
