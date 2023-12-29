@@ -164,7 +164,7 @@ export class OAuthService {
       if (complianceLevel === 'commercial')
         return 'library_read:self';
       else { // complianceLevel.includes('gov')
-        return 'library_read';
+        return 'library_read library_write';
       }
     }
     else { // sourceOrDest === 'dest'

@@ -88,8 +88,11 @@ export class MigrationConsoleComponent {
         'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`}
       };
       response = (await httpRequest(requestConfig));
-
-      libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
+      
+      const filteredNewDocs = response.libraryDocumentList.filter(function(doc: any) { return doc.ownerEmail === 'per06434@signgovdevtestorg1.com'; });
+      libraryDocuments = libraryDocuments.concat(filteredNewDocs);
+      console.log(`PAGE ${i}`);
+      console.log(libraryDocuments);
       const cursor = response.page.nextCursor;
       if (cursor !== undefined) {
         cursorQueryString = `&cursor=${cursor}`;
@@ -106,8 +109,8 @@ export class MigrationConsoleComponent {
     const oldThis: MigrationConsoleComponent = this;
     libraryDocuments.forEach(function(doc: any) {
       oldThis.documentIds.push(doc.id);
-    });
-    
+    });   
+
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocuments); 
   }
