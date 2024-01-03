@@ -43,7 +43,7 @@ export interface I_Settings {
 const devSettings: I_Settings = {
 	forceUseTestCredentials: true,
 	redirectUri: "https://migrationtool.com",
-	docNamePrefixForDebug: '(-!- FROM ELECTRON APP -!-)',
+	docNamePrefixForDebug: '(Z) ',
 	debugViewDownloadedPdf: false,
 	devPageLimit: -1
 };
@@ -56,4 +56,4 @@ const prodSettings: I_Settings = {
 	devPageLimit: -1
 };
 
-export const Settings = prodSettings;
+export const Settings = devSettings;
