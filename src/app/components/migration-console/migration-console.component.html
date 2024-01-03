@@ -26,10 +26,10 @@
 			</div>
 			<button (click)="getDocumentList('')"> Display documents from the source account </button>
 		    <ng-container formArrayName="documents" *ngFor="let group of documents.controls; let i = index">
-				<div class="document-row" [formGroup]="group">
+			<div class="document-row" [formGroup]="group">
 		        <input type="checkbox" [checked]="true" formControlName="isSelected" placeholder="true">
 		        <input formControlName="name" placeholder="document name" readonly>
-		      </div>
+		    </div>
 		    </ng-container>
 		</div>
 
@@ -45,5 +45,6 @@
 	    <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
 	</div>
 
-	<button type="submit" *ngIf="_readyForDownload" (click) = "migrate()">Begin upload</button>
+	<button type="submit" *ngIf="_readyForDownload" (click) = "migrate()">Migrate selected</button>
+	<button type="submit" *ngIf="_readyForDownload" (click) = "delete()">Delete selected</button>
 </form>

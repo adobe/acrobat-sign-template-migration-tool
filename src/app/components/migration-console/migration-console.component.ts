@@ -55,11 +55,12 @@ export class MigrationConsoleComponent {
   _readyForDownload: boolean = false;
 
   populateDocForm(libraryDocuments: any[]) {
-    this._readyForDownload = true; // causes the "Begin upload" button to appear
+    this._readyForDownload = true; // causes the "Migrate selected" and "Delete selected" buttons to appear
     this.documents = this.formBuilder.array([]); // clear documents of existing entries before pushing to it
     libraryDocuments.forEach(doc => {
       const documentForm = this.formBuilder.group({
         name: [doc.name],
+        id: [doc.id],
         isSelected: [false]
       });
       this.documents.push(documentForm);
@@ -81,7 +82,7 @@ export class MigrationConsoleComponent {
   async getDocumentList(owner: string): Promise<any> {
     const baseUrl = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
 
-    /* Get all library documents. */
+    /* Fill the libraryDocuments array with objects representing all of the library documents. */
     const pageSize = 100;
     let libraryDocuments: any[] = [];
     let response;
@@ -117,17 +118,9 @@ export class MigrationConsoleComponent {
     }
     this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the source account.`)
 
-    /* Initalize documentIds. */
-    const oldThis: MigrationConsoleComponent = this;
-    libraryDocuments.forEach(function(doc: any) {
-      oldThis.documentIds.push(doc.id);
-    });   
-
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocuments); 
   }
-
-  private documentIds: string[] = [];
 
   /* These two variables are not referenced in this file, but instead in migration.ts.
   In the future it would be better to have migrate() return values that should be used
@@ -156,19 +149,45 @@ export class MigrationConsoleComponent {
               private oAuthService: OAuthService, // migration.ts uses this instance's oAuthService
               private urlService: UrlService) { }
 
-  async migrate(): Promise<any> {
-    /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
+  /* Get a list of the IDs of documents that the user wants to upload. */
+  getSelectedDocs(): string[] {
     let selectedDocs: string[] = [];
-    const oldThis: MigrationConsoleComponent = this;
-    let i = 0;
     this.documents.controls.forEach(function(group: any) {
-      if (group.value.isSelected) {
-        selectedDocs.push(oldThis.documentIds[i]);
-      }
-      i ++;
+      if (group.value.isSelected)
+        selectedDocs.push(group.value.id);
     });
 
-    migrateAll(this, selectedDocs);
+    return selectedDocs;
+  }
+
+  async migrate(): Promise<any> {
+    migrateAll(this, this.getSelectedDocs());
+  }
+
+  async delete(): Promise<any> {
+    /* Use the source refresh token to swap out the source access token, and get the base URI used for calling the Sign API. */
+    console.log('about to refresh token in delete()');
+    const tokenResponse = await this.oAuthService.refreshToken(this.sourceComplianceLevel, this.sourceShard, 
+    this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.destRefreshToken);
+    console.log('tokenResponse', tokenResponse);
+    this.sourceBearerToken = tokenResponse.accessToken; this.sourceRefreshToken = tokenResponse.refreshToken;
+    const baseUri = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
+    
+    /* Delete documents that were selected by the user. */
+    for (const doc of this.getSelectedDocs()) {
+      const requestConfig =
+      {
+        'method': 'put',
+        'url': `${baseUri}/libraryDocuments/${doc}/state`,
+        'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`},
+        'data': {'state': 'REMOVED'}
+      };
+      console.log(requestConfig);
+      await httpRequest(requestConfig);
+    }
+
+    /* Update the documents displayed to the user. */
+    this.getDocumentList('');
   }
 
   async ngOnInit() {
