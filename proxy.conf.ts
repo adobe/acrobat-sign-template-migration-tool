@@ -39,11 +39,11 @@ module.exports = [
       pathRewrite: {'^/pdf-api': ''}
    },
    {
-      context: '/fedramp-api/**',
+      context: '/gov-api/**',
       target: 'https://api.na1.adobesignstage.us/api/rest/v6', // getApiBaseUriFedRamp(Settings.inDevelopment, false)
       changeOrigin: true,
       secure: false,
-      pathRewrite: {'^/fedramp-api': ''}
+      pathRewrite: {'^/gov-api': ''}
    },
    {
       context: '/commercial-api/**',

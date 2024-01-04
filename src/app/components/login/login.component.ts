@@ -34,10 +34,10 @@ import { UrlService } from 'src/app/services/url.service';
   OAuth for commercial:
   https://secure.na1.adobesign.com/public/static/oauthDoc.jsp
 
-  OAuth for FedRamp:
+  OAuth for gov:
   https://wiki.corp.adobe.com/pages/viewpage.action?spaceKey=~kmashint&title=Adobe+Acrobat+Sign+and+US+Gov+Cloud+-+FedRAMP+Moderate#AdobeAcrobatSignandUSGovCloudFedRAMPModerate-Authorize
 
-  Commercial vs. FedRamp:
+  Commercial vs. gov:
   https://wiki.corp.adobe.com/display/ES/API+Application+Commercial+vs+Gov+Cloud
   
   ===================================================================
@@ -52,8 +52,8 @@ import { UrlService } from 'src/app/services/url.service';
 export class LoginComponent implements OnInit {
   /* Fields input by user. */
   _sourceComplianceLevel: string = 'commercial'; // hardcoded for now; later, use Reactive Forms to pull initial value from .html
-  get sourceComplianceLevel(): 'commercial' | 'fedramp' {
-    return this._sourceComplianceLevel as 'commercial' | 'fedramp';
+  get sourceComplianceLevel(): 'commercial' | 'gov-stage' | 'gov-prod' {
+    return this._sourceComplianceLevel as 'commercial' | 'gov-stage' | 'gov-prod';
   }
 
   _sourceOAuthClientId: string = '';
@@ -84,13 +84,13 @@ export class LoginComponent implements OnInit {
   get sourceShard(): string {
     if (this.sourceComplianceLevel === 'commercial')
       return this._sourceShard;
-    else // this.sourceComplianceLevel === 'fedramp'
-      return 'na1'; // there is currently only one shard for all FedRamp accounts
+    else // this.sourceComplianceLevel.includes('gov')
+      return 'na1'; // there is currently only one shard for all gov accounts
   }
 
   _destComplianceLevel: string = 'commercial'; // hardcoded for now; later, use use Reactive Forms to pull initial value from .html
-  get destComplianceLevel(): 'commercial' | 'fedramp' {
-    return this._destComplianceLevel as 'commercial' | 'fedramp';
+  get destComplianceLevel(): 'commercial' | 'gov-stage' | 'gov-prod' {
+    return this._destComplianceLevel as 'commercial' | 'gov-stage' | 'gov-prod';
   }
 
   _destOAuthClientId: string = '';
@@ -121,8 +121,8 @@ export class LoginComponent implements OnInit {
   get destShard(): string {
     if (this.destComplianceLevel === 'commercial')
       return this._destShard;
-    else // this.destComplianceLevel === 'fedramp'
-      return 'na1'; // there is currently only one shard for all FedRamp accounts
+    else // this.destComplianceLevel.includes('gov')
+      return 'na1'; // there is currently only one shard for all gov accounts
   }
 
   /* Helper function for use in .html. A null check is not necessary all other times
@@ -142,7 +142,7 @@ export class LoginComponent implements OnInit {
     this.loginHelper('dest', this.destComplianceLevel, this.destOAuthClientId, this.destOAuthClientSecret, this.destLoginEmail, this.destShard);
   }
 
-  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
+  async loginHelper(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', oAuthClientId: string, oAuthClientSecret: string, loginEmail: string, shard: string) {
     /* Get the URL, the "authorization grant request", that the user must be redirected to in order to log in.*/
     const authGrantRequest = this.oAuthService.getOAuthGrantRequest(sourceOrDest, complianceLevel, shard, oAuthClientId, Settings.redirectUri, loginEmail);
 

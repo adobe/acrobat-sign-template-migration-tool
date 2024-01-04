@@ -41,10 +41,10 @@ export class OAuthService {
     Inputs:
       - redirectUri is the URI that the user should be redirected to once they have visited the URL
       that is the authorizaton grant request
-      - env must be such that env.toLowerCase() is either 'commercial' or 'fedramp'
+      - env must be such that env.toLowerCase() is either 'commercial' or 'gov'
   */
   
-  getOAuthGrantRequest(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp',
+  getOAuthGrantRequest(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod',
     shard = '', clientId: string, redirectUri: string, loginEmail: string): I_OAuthGrantRequest {
     const state = getRandomId();
     const scope = this.getOAuthScopeString(sourceOrDest, complianceLevel);
@@ -104,7 +104,7 @@ export class OAuthService {
       throw new Error('The authorization grant URL does not contain a "code" or an "error" query param.');
   }
 
-  async getToken(complianceLevel: 'commercial' | 'fedramp', shard = '', clientId: string,
+  async getToken(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', shard = '', clientId: string,
                  clientSecret: string, authGrant: string, redirectUri: string): Promise<any> {
     
     let requestConfig: any = {
@@ -114,7 +114,7 @@ export class OAuthService {
     };
 
     /* Whether we need to pass arguments as part of the request body or as query params depends
-    on whether the account is commercial or FedRamp. */
+    on whether the account is commercial or gov. */
     const args = {
       'client_id' : clientId,
       'client_secret' : clientSecret,
@@ -125,14 +125,14 @@ export class OAuthService {
 
     if (complianceLevel === 'commercial')
       requestConfig.data = args; // request body
-    else // complianceLevel === 'fedramp'
+    else // complianceLevel.includes('gov')
       requestConfig.params = args; // query params
 
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
-  async refreshToken(complianceLevel: 'commercial' | 'fedramp', shard = '', 
+  async refreshToken(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod', shard = '', 
   clientId: string, clientSecret: string, refreshToken: string): Promise<any> {
     let requestConfig: any = {
       'method': 'post',
@@ -141,7 +141,7 @@ export class OAuthService {
     };
 
     /* Whether we need to pass arguments as part of the request body or as query params depends
-    on whether the account is commercial or FedRamp. */
+    on whether the account is commercial or gov. */
     const args = {
       'client_id' : clientId,
       'client_secret' : clientSecret,
@@ -151,30 +151,31 @@ export class OAuthService {
 
     if (complianceLevel === 'commercial')
       requestConfig.data = args; // pass args in request body
-    else // complianceLevel === 'fedramp'
+    else // complianceLevel.includes('gov')
       requestConfig.params = args; // pass args as query params
 
+    console.log('refreshToken called with requestConfig', requestConfig);
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
 
   /* Helper functions. */
-  getOAuthScopeString(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'fedramp'): string {
+  getOAuthScopeString(sourceOrDest: 'source' | 'dest', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod'): string {
     if (sourceOrDest === 'source') {
       if (complianceLevel === 'commercial')
         return 'library_read:self';
-      else { // complianceLevel == 'fedramp'
-        return 'library_read';
+      else { // complianceLevel.includes('gov')
+        /* If permissions cooresponding to {the scope string returned by this function} are granted 
+        by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
+        Refresh tokens cannot be requested in the gov environment unless this 'offline_access' has been
+        approved by the server. */
+        return 'library_read library_write offline_access';
       }
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
         return 'library_write:self';
-      else // complianceLevel === 'fedramp'
-        /* If permissions cooresponding to {the scope string returned by this function} are granted 
-        by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
-        Refresh tokens cannot be requested in the FedRAMP environment unless this 'offline_access' has been
-        approved by the server. */
+      else // complianceLevel.includes('gov')
         return 'library_write offline_access';
     }
   }
