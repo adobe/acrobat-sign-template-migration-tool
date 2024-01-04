@@ -45,6 +45,6 @@
 	    <div style="flex:1"> <!-- This div is just used to occupy horizontal space. --> </div>
 	</div>
 
-	<button type="submit" *ngIf="_readyForDownload" (click) = "migrate()">Migrate selected</button>
-	<button type="submit" *ngIf="_readyForDownload" (click) = "delete()">Delete selected</button>
+	<button type="submit" *ngIf="_readyForDownload" (click) = "migrateSelected()">Migrate selected</button>
+	<button type="submit" *ngIf="_readyForDownload" (click) = "deleteSelected()">Delete selected</button>
 </form>

@@ -25,9 +25,10 @@ import { Shared, SharedInner, SharerService } from '../../services/sharer.servic
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
-import { migrateAll as migrateAll } from './migration';
+import { migrate } from './migration';
 import { OAuthService } from 'src/app/services/oauth.service';
 import { UrlService } from 'src/app/services/url.service';
+import { swapTokens } from 'src/app/util/token-swap';
 
 @Component({
   selector: 'app-migration-console',
@@ -53,19 +54,6 @@ export class MigrationConsoleComponent {
 
   _owner: string = '';
   _readyForDownload: boolean = false;
-
-  populateDocForm(libraryDocuments: any[]) {
-    this._readyForDownload = true; // causes the "Migrate selected" and "Delete selected" buttons to appear
-    this.documents = this.formBuilder.array([]); // clear documents of existing entries before pushing to it
-    libraryDocuments.forEach(doc => {
-      const documentForm = this.formBuilder.group({
-        name: [doc.name],
-        id: [doc.id],
-        isSelected: [false]
-      });
-      this.documents.push(documentForm);
-    });
-  }
 
   get consoleMessages() {
     return this.migrationToolForm.controls['consoleMessages'] as FormArray;
@@ -122,6 +110,19 @@ export class MigrationConsoleComponent {
     this.populateDocForm(libraryDocuments); 
   }
 
+  populateDocForm(libraryDocuments: any[]) {
+    this._readyForDownload = true; // causes the "Migrate selected" and "Delete selected" buttons to appear
+    this.documents = this.formBuilder.array([]); // clear documents of existing entries before pushing to it
+    libraryDocuments.forEach(doc => {
+      const documentForm = this.formBuilder.group({
+        name: [doc.name],
+        id: [doc.id],
+        isSelected: [false]
+      });
+      this.documents.push(documentForm);
+    });
+  }
+
   /* These two variables are not referenced in this file, but instead in migration.ts.
   In the future it would be better to have migrate() return values that should be used
   to update these two variables, rather than having migrate() actually perform said update
@@ -160,11 +161,35 @@ export class MigrationConsoleComponent {
     return selectedDocs;
   }
 
-  async migrate(): Promise<any> {
-    migrateAll(this, this.getSelectedDocs());
+  async migrateSelected(): Promise<any> {
+    const selectedDocs = this.getSelectedDocs();
+    let sourceTimeOfLastRefresh = Date.now(); let destTimeOfLastRefresh = Date.now();
+    for (let i = 0; i < selectedDocs.length; ) {
+      /* Swap the current access tokens for new ones. */
+      let tokenSwapResult = await swapTokens(this, this.sourceBearerToken, this.sourceRefreshToken, sourceTimeOfLastRefresh, 5, (1/50) * 5);
+      this.sourceBearerToken = tokenSwapResult.accessToken; this.sourceRefreshToken = tokenSwapResult.refreshToken; sourceTimeOfLastRefresh = tokenSwapResult.timeOfLastRefresh;
+      
+      tokenSwapResult = await swapTokens(this, this.destBearerToken, this.destRefreshToken, destTimeOfLastRefresh, 5, (1/50) * 5);
+      this.destBearerToken = tokenSwapResult.accessToken; this.destRefreshToken = tokenSwapResult.refreshToken; destTimeOfLastRefresh = tokenSwapResult.timeOfLastRefresh;
+      
+      /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
+      this.logToConsole(`Beginning migration of document ${i + 1} of the ${selectedDocs.length} documents.`);
+      let error = false;
+      try {
+        await migrate(this, selectedDocs[i]);
+      } catch (err) {
+        error = true;
+        this.logToConsole(`Migration of document ${i + 1} of the ${selectedDocs.length} failed. Retrying migration of document ${i + 1}.`);
+      }
+      if (!error) {
+        this.logToConsole(`Document ${i + 1} of the ${selectedDocs.length} documents has been sucessfully migrated.`);
+        this.logToConsole('========================================================================');
+        i ++;
+      }
+    }
   }
 
-  async delete(): Promise<any> {
+  async deleteSelected(): Promise<any> {
     /* Use the source refresh token to swap out the source access token, and get the base URI used for calling the Sign API. */
     console.log('about to refresh token in delete()');
     const tokenResponse = await this.oAuthService.refreshToken(this.sourceComplianceLevel, this.sourceShard, 
