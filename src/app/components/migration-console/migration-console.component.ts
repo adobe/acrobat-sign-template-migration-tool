@@ -190,12 +190,6 @@ export class MigrationConsoleComponent {
   }
 
   async deleteSelected(): Promise<any> {
-    /* Use the source refresh token to swap out the source access token, and get the base URI used for calling the Sign API. */
-    console.log('about to refresh token in delete()');
-    const tokenResponse = await this.oAuthService.refreshToken(this.sourceComplianceLevel, this.sourceShard, 
-    this.sourceOAuthClientId, this.sourceOAuthClientSecret, this.destRefreshToken);
-    console.log('tokenResponse', tokenResponse);
-    this.sourceBearerToken = tokenResponse.accessToken; this.sourceRefreshToken = tokenResponse.refreshToken;
     const baseUri = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
     
     /* Delete documents that were selected by the user. */
@@ -209,10 +203,8 @@ export class MigrationConsoleComponent {
       };
       console.log(requestConfig);
       await httpRequest(requestConfig);
+      await this.getDocumentList(''); // update the documents displayed to the user
     }
-
-    /* Update the documents displayed to the user. */
-    this.getDocumentList('');
   }
 
   async ngOnInit() {
@@ -240,13 +232,17 @@ export class MigrationConsoleComponent {
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
+      oldThis.sourceOAuthClientId = shared.source.credentials.oAuthClientId; oldThis.sourceOAuthClientSecret = shared.source.credentials.oAuthClientSecret;
       console.log('sourceBearerToken ', oldThis.sourceBearerToken);
+      console.log('sourceRefreshToken ', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
+      oldThis.destOAuthClientId = shared.dest.credentials.oAuthClientId; oldThis.destOAuthClientSecret = shared.dest.credentials.oAuthClientSecret;
       console.log('destBearerToken ', oldThis.destBearerToken);
+      console.log('destRefreshToken ', oldThis.destRefreshToken);
     });
   }
 

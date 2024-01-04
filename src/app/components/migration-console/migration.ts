@@ -20,7 +20,6 @@
 
 import { Settings } from "src/app/settings/settings";
 import { httpRequest } from "src/app/util/electron-functions";
-import { swapTokens } from "src/app/util/token-swap";
 
 export async function migrate(oldThis: any, documentId: string): Promise<any> {  
   oldThis.logToConsole('About to inspect this document in the source account and then download it from the source account.');

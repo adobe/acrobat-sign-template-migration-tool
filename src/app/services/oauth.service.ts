@@ -154,6 +154,7 @@ export class OAuthService {
     else // complianceLevel.includes('gov')
       requestConfig.params = args; // pass args as query params
 
+    console.log('refreshToken called with requestConfig', requestConfig);
     const response = (await httpRequest(requestConfig));
     return this.handleTokenEndpointErrorsAndReturn(response);
   }
@@ -164,17 +165,17 @@ export class OAuthService {
       if (complianceLevel === 'commercial')
         return 'library_read:self';
       else { // complianceLevel.includes('gov')
-        return 'library_read library_write';
+        /* If permissions cooresponding to {the scope string returned by this function} are granted 
+        by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
+        Refresh tokens cannot be requested in the gov environment unless this 'offline_access' has been
+        approved by the server. */
+        return 'library_read library_write offline_access';
       }
     }
     else { // sourceOrDest === 'dest'
       if (complianceLevel === 'commercial')
         return 'library_write:self';
       else // complianceLevel.includes('gov')
-        /* If permissions cooresponding to {the scope string returned by this function} are granted 
-        by the server, then, including 'offline_access' in said scope string enables the request of refresh tokens.
-        Refresh tokens cannot be requested in the gov environment unless this 'offline_access' has been
-        approved by the server. */
         return 'library_write offline_access';
     }
   }
