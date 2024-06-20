@@ -102,9 +102,9 @@ export class MigrationConsoleComponent {
       else
         done = true;
 
-      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the source account.`);
+      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} templates from the source account.`);
     }
-    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the source account.`)
+    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} templates from the source account.`)
 
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocuments); 
@@ -161,6 +161,7 @@ export class MigrationConsoleComponent {
     return selectedDocs;
   }
 
+  /* Migrate the documents that were selected by the user from the source account to the destination account. */
   async migrateSelected(): Promise<any> {
     const selectedDocs = this.getSelectedDocs();
     let sourceTimeOfLastRefresh = Date.now(); let destTimeOfLastRefresh = Date.now();
@@ -189,10 +190,9 @@ export class MigrationConsoleComponent {
     }
   }
 
+  /* Delete documents that were selected by the user. */
   async deleteSelected(): Promise<any> {
     const baseUri = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
-    
-    /* Delete documents that were selected by the user. */
     for (const doc of this.getSelectedDocs()) {
       const requestConfig =
       {
@@ -201,7 +201,6 @@ export class MigrationConsoleComponent {
         'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`},
         'data': {'state': 'REMOVED'}
       };
-      console.log(requestConfig);
       await httpRequest(requestConfig);
       await this.getDocumentList(''); // update the documents displayed to the user
     }
