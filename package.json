@@ -1,7 +1,7 @@
 {
   "name": "migration-tool",
   "version": "0.0.0",
-  "main": "./electron/main.js",
+  "main": "./src/electron/main.js",
   "scripts": {
     "ng": "ng",
     "devStart": "ng build --base-href . && electron .",

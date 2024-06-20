@@ -25,9 +25,10 @@ import { Shared, SharedInner, SharerService } from '../../services/sharer.servic
 import { Settings } from '../../settings/settings';
 import { httpRequest } from '../../util/electron-functions';
 import { tab } from '../../util/spacing';
-import { migrateAll as migrateAll } from './migration';
+import { migrate } from './migration';
 import { OAuthService } from 'src/app/services/oauth.service';
 import { UrlService } from 'src/app/services/url.service';
+import { swapTokens } from 'src/app/util/token-swap';
 
 @Component({
   selector: 'app-migration-console',
@@ -47,18 +48,12 @@ export class MigrationConsoleComponent {
     return this.migrationToolForm.controls['documents'] as FormArray;
   }
 
-  readyForDownload: boolean = false;
-
-  populateDocForm(libraryDocuments: any[]) {
-    this.readyForDownload = true; // causes the "Begin upload" button to appear
-    libraryDocuments.forEach(template => {
-      const documentForm = this.formBuilder.group({
-        name: [template.name],
-        isSelected: [false]
-      });
-      this.documents.push(documentForm);
-    });
+  set documents(value: FormArray) {
+    this.migrationToolForm.controls['documents'] = value;
   }
+
+  _owner: string = '';
+  _readyForDownload: boolean = false;
 
   get consoleMessages() {
     return this.migrationToolForm.controls['consoleMessages'] as FormArray;
@@ -72,24 +67,33 @@ export class MigrationConsoleComponent {
     this.logToConsole(tab() + message);
   }
 
-  async getDocumentList(): Promise<any> {
+  async getDocumentList(owner: string): Promise<any> {
     const baseUrl = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
 
-    /* Get all library documents. */
+    /* Fill the libraryDocuments array with objects representing all of the library documents. */
     const pageSize = 100;
     let libraryDocuments: any[] = [];
     let response;
     let cursorQueryString = '';
     let done = false;
     for (let i = 1; !done; i ++) {
+      /* Get the library documents from the current page. */
       const requestConfig = {
         'method': 'get',
         'url': `${baseUrl}/libraryDocuments?pageSize=${pageSize}` + cursorQueryString,
         'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`}
       };
       response = (await httpRequest(requestConfig));
-
-      libraryDocuments = libraryDocuments.concat(response.libraryDocumentList);
+      
+      /* Add the library documents from the current page, filtering if necessary, to the libraryDocuments array. */
+      let newDocs: any[];
+      if (owner !== '')
+        newDocs = response.libraryDocumentList.filter(function(doc: any) { return doc.ownerEmail === owner; });
+      else
+        newDocs = response.libraryDocumentList;
+      libraryDocuments = libraryDocuments.concat(newDocs);
+      
+      /* Advance the cursor to the next page. If there is no next page, we're done. */
       const cursor = response.page.nextCursor;
       if (cursor !== undefined) {
         cursorQueryString = `&cursor=${cursor}`;
@@ -98,21 +102,26 @@ export class MigrationConsoleComponent {
       else
         done = true;
 
-      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} documents from the commercial account.`);
+      this.logToConsole(`Loaded more than ${(i - 1) * pageSize} and at most ${i * pageSize} templates from the source account.`);
     }
-    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} documents from the commercial account.`)
+    this.logToConsole(`Done loading. Loaded ${libraryDocuments.length} templates from the source account.`)
 
-    /* Initalize documentIds. */
-    const oldThis: MigrationConsoleComponent = this;
-    libraryDocuments.forEach(function(doc: any) {
-      oldThis.documentIds.push(doc.id);
-    });
-    
     /* Set up the FormArray that will be used to display the list of documents to the user. */
     this.populateDocForm(libraryDocuments); 
   }
 
-  private documentIds: string[] = [];
+  populateDocForm(libraryDocuments: any[]) {
+    this._readyForDownload = true; // causes the "Migrate selected" and "Delete selected" buttons to appear
+    this.documents = this.formBuilder.array([]); // clear documents of existing entries before pushing to it
+    libraryDocuments.forEach(doc => {
+      const documentForm = this.formBuilder.group({
+        name: [doc.name],
+        id: [doc.id],
+        isSelected: [false]
+      });
+      this.documents.push(documentForm);
+    });
+  }
 
   /* These two variables are not referenced in this file, but instead in migration.ts.
   In the future it would be better to have migrate() return values that should be used
@@ -124,13 +133,13 @@ export class MigrationConsoleComponent {
   destRefreshToken = '';
 
   /* Fields input by user. */
-  sourceComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  sourceComplianceLevel: 'commercial' | 'gov-stage' | 'gov-prod' = 'commercial';
   sourceOAuthClientId: string = '';
   sourceOAuthClientSecret: string = '';
   sourceLoginEmail: string = '';
   sourceShard: string = '';
 
-  destComplianceLevel: 'commercial' | 'fedramp' = 'commercial';
+  destComplianceLevel: 'commercial' | 'gov-stage' | 'gov-prod' = 'commercial';
   destOAuthClientId: string = '';
   destOAuthClientSecret: string = '';
   destLoginEmail: string = '';
@@ -141,19 +150,61 @@ export class MigrationConsoleComponent {
               private oAuthService: OAuthService, // migration.ts uses this instance's oAuthService
               private urlService: UrlService) { }
 
-  async migrate(): Promise<any> {
-    /* Get a list of all the indices cooresponding to documents that the user wants to upload. */
+  /* Get a list of the IDs of documents that the user wants to upload. */
+  getSelectedDocs(): string[] {
     let selectedDocs: string[] = [];
-    const oldThis: MigrationConsoleComponent = this;
-    let i = 0;
     this.documents.controls.forEach(function(group: any) {
-      if (group.value.isSelected) {
-        selectedDocs.push(oldThis.documentIds[i]);
-      }
-      i ++;
+      if (group.value.isSelected)
+        selectedDocs.push(group.value.id);
     });
 
-    migrateAll(this, selectedDocs);
+    return selectedDocs;
+  }
+
+  /* Migrate the documents that were selected by the user from the source account to the destination account. */
+  async migrateSelected(): Promise<any> {
+    const selectedDocs = this.getSelectedDocs();
+    let sourceTimeOfLastRefresh = Date.now(); let destTimeOfLastRefresh = Date.now();
+    for (let i = 0; i < selectedDocs.length; ) {
+      /* Swap the current access tokens for new ones. */
+      let tokenSwapResult = await swapTokens(this, this.sourceBearerToken, this.sourceRefreshToken, sourceTimeOfLastRefresh, 5, (1/50) * 5);
+      this.sourceBearerToken = tokenSwapResult.accessToken; this.sourceRefreshToken = tokenSwapResult.refreshToken; sourceTimeOfLastRefresh = tokenSwapResult.timeOfLastRefresh;
+      
+      tokenSwapResult = await swapTokens(this, this.destBearerToken, this.destRefreshToken, destTimeOfLastRefresh, 5, (1/50) * 5);
+      this.destBearerToken = tokenSwapResult.accessToken; this.destRefreshToken = tokenSwapResult.refreshToken; destTimeOfLastRefresh = tokenSwapResult.timeOfLastRefresh;
+      
+      /* Try to reupload the ith document. Only proceed to the next iteration if we succeed. */
+      this.logToConsole(`Beginning migration of document ${i + 1} of the ${selectedDocs.length} documents.`);
+      let error = false;
+      try {
+        await migrate(this, selectedDocs[i]);
+      } catch (err) {
+        error = true;
+        this.logToConsole(`Migration of document ${i + 1} of the ${selectedDocs.length} failed. Retrying migration of document ${i + 1}.`);
+      }
+      if (!error) {
+        this.logToConsole(`Document ${i + 1} of the ${selectedDocs.length} documents has been sucessfully migrated.`);
+        this.logToConsole('========================================================================');
+        i ++;
+      }
+    }
+  }
+
+  async deleteSelected(): Promise<any> {
+    const baseUri = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
+    
+    /* Delete documents that were selected by the user. */
+    for (const doc of this.getSelectedDocs()) {
+      const requestConfig =
+      {
+        'method': 'put',
+        'url': `${baseUri}/libraryDocuments/${doc}/state`,
+        'headers': {'Authorization': `Bearer ${this.sourceBearerToken}`},
+        'data': {'state': 'REMOVED'}
+      };
+      await httpRequest(requestConfig);
+      await this.getDocumentList(''); // update the documents displayed to the user
+    }
   }
 
   async ngOnInit() {
@@ -181,13 +232,17 @@ export class MigrationConsoleComponent {
       let tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.source, sourceRedirectUrl);
       oldThis.sourceComplianceLevel = shared.source.complianceLevel; oldThis.sourceShard = shared.source.shard;
       oldThis.sourceBearerToken = tokenResponse.accessToken; oldThis.sourceRefreshToken = tokenResponse.refreshToken;
+      oldThis.sourceOAuthClientId = shared.source.credentials.oAuthClientId; oldThis.sourceOAuthClientSecret = shared.source.credentials.oAuthClientSecret;
       console.log('sourceBearerToken ', oldThis.sourceBearerToken);
+      console.log('sourceRefreshToken ', oldThis.sourceRefreshToken);
 
       /* Do the same with the destRedirectUrl. */
       tokenResponse = await oldThis.oAuthLogIn(oldThis, shared.dest, destRedirectUrl);
       oldThis.destComplianceLevel = shared.dest.complianceLevel; oldThis.destShard = shared.dest.shard;
       oldThis.destBearerToken = tokenResponse.accessToken; oldThis.destRefreshToken = tokenResponse.refreshToken;
+      oldThis.destOAuthClientId = shared.dest.credentials.oAuthClientId; oldThis.destOAuthClientSecret = shared.dest.credentials.oAuthClientSecret;
       console.log('destBearerToken ', oldThis.destBearerToken);
+      console.log('destRefreshToken ', oldThis.destRefreshToken);
     });
   }
 
@@ -213,5 +268,10 @@ export class MigrationConsoleComponent {
   when requestConfig is passed from httpRequest() to the axios() call in electron/main.ts. */
   async httpRequestTemp(requestConfig: any): Promise<any> {
     return (await axios(requestConfig)).data;
+  }
+
+  /* Helper function used in migration-console.component.html. */
+  getValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
   }
 }

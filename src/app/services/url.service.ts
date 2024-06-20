@@ -28,11 +28,9 @@ export class UrlService {
   constructor(private router: Router, private serializer: UrlSerializer) {}
 
   /* 
-    - apiEnv needs to be specified if and only if complianceLevel === 'fedramp'
-
       Returns the base URI that is used to access the Adobe Sign API.
   */
-  async getApiBaseUri(bearerToken: string = '', complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv) {
+  async getApiBaseUri(bearerToken: string = '', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod') {
     /* If the account is commercial, then the URI returned by this function depends on what shard (e.g. na1, na2, na3, na4)
     the account is on; we use an API call to determine the return value. */
     if (complianceLevel === 'commercial') {
@@ -49,11 +47,11 @@ export class UrlService {
       baseUri = baseUri.substring(0, baseUri.length - 1) + "/api/rest/v6";
       return baseUri;
     }
-    /* All FedRamp accounts are on the na1 shard, so we can hardcode the returned value for FedRamp accounts. */
-    else { // complianceLevel === 'fedramp'
-      if (apiEnv === 'stage')
+    /* All gov accounts are on the na1 shard, so we can hardcode the returned value for gov accounts. */
+    else { // complianceLevel.includes('gov')
+      if (complianceLevel.includes('stage'))
         return 'https://api.na1.adobesignstage.us/api/rest/v6';
-      else // apiEnv === 'prod' 
+      else // complianceLevel.includes('prod') 
         return 'https://api.na1.adobesign.us/api/rest/v6';
     }
   }
@@ -63,41 +61,41 @@ export class UrlService {
     'public/oauth/v2' or a string of the form `/oauth/v2/${str}` to access typical OAuth endpoints. (The first option
     is only used for the authorization grant request.)
     
-    When using this function for a FedRamp account (complianceLevel === 'fedramp'), one will have to postpend a string of 
+    When using this function for a gov account (complianceLevel.includes('gov')), one will have to postpend a string of 
     the form `/api/v1/${str}` to access typical OAuth endpoints.  
   */
-  getOAuthBaseUri(shard = '', complianceLevel: 'commercial' | 'fedramp', apiEnv: 'stage' | 'prod' = Settings.apiEnv): string {
+  getOAuthBaseUri(shard = '', complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod'): string {
     if (complianceLevel === 'commercial') { // For commercial, always use the prod endpoint
       if (shard === '')
         throw new Error('The empty string was passed as the "shard" argument in a call to getOAuthBaseUri().')  
       return `https://secure.${shard}.adobesign.com`;
     }
-    else { // complianceLevel === 'fedramp'
-      if (apiEnv === 'stage')
+    else { // complianceLevel.includes('gov')
+      if (complianceLevel.includes('stage'))
         return 'https://secure.na1.adobesignstage.us/api/gateway/adobesignauthservice';
-      else // apiEnv === 'prod'
+      else // complianceLevel.includes('prod')
         return 'https://secure.na1.adobesign.us/api/gateway/adobesignauthservice';
     }
   }
 
-  getOAuthAuthorizationGrantRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
+  getOAuthAuthorizationGrantRequestEndpoint(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod') {
     if (complianceLevel === 'commercial')
       return '/public/oauth/v2';
-    else // complianceLevel === 'fedramp'
+    else // complianceLevel.includes('gov')
       return '/api/v1/authorize';
   }
 
-  getOAuthTokenRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
+  getOAuthTokenRequestEndpoint(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod') {
     if (complianceLevel === 'commercial')
       return '/oauth/v2/token';
-    else // complianceLevel === 'fedramp'
+    else // complianceLevel.includes('gov')
       return '/api/v1/token';
   }
 
-  getOAuthRefreshRequestEndpoint(complianceLevel: 'commercial' | 'fedramp') {
+  getOAuthRefreshRequestEndpoint(complianceLevel: 'commercial' | 'gov-stage' | 'gov-prod') {
     if (complianceLevel === 'commercial')
       return '/oauth/v2/refresh';
-    else // complianceLevel === 'fedramp'
+    else // complianceLevel.includes('gov')
       return '/oauth/v2/token';
   }
 
