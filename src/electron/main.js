@@ -53,7 +53,7 @@ let redirectUrls = []; // string[]
 function loadIndexHtml(win) {
   win.loadURL(
     url.format({
-      pathname: path.join(__dirname, `../dist/migration-tool/index.html`),
+      pathname: path.join(__dirname, `../../dist/migration-tool/index.html`),
       protocol: "file:",
       slashes: true
     })
