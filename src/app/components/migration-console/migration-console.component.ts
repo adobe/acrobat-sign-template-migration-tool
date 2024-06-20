@@ -190,9 +190,10 @@ export class MigrationConsoleComponent {
     }
   }
 
-  /* Delete documents that were selected by the user. */
   async deleteSelected(): Promise<any> {
     const baseUri = await this.urlService.getApiBaseUri(this.sourceBearerToken, this.sourceComplianceLevel);
+    
+    /* Delete documents that were selected by the user. */
     for (const doc of this.getSelectedDocs()) {
       const requestConfig =
       {

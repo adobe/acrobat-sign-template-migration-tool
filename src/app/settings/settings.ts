@@ -56,4 +56,4 @@ const prodSettings: I_Settings = {
 	devPageLimit: -1
 };
 
-export const Settings = prodSettings;
+export const Settings = devSettings;
