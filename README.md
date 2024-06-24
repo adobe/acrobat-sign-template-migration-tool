@@ -52,10 +52,12 @@ If you get this error, just close the application and restart it.
 
 # Technical implementation
 
-The below describes the most complicated part of the application, which is the communication between the Electron main process and the Electron renderer process implemented in the application. There are two main tasks that require this communication:
+The most complicated part of the application is the communication between the Electron main process and the Electron renderer process. There are two main tasks that require this communication:
 
 1. Responding to the event of a user logging into the source account or destination account.
 2. Obtaining the OAuth access token after the migration console UI loads.
+
+The below organizes code from multiple different files into coherent sequences of "send" (`send` method calls) and "receive" (`on` method calls).
 
 ## 1. Responding to log-in
 
