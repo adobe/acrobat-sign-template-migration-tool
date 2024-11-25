@@ -96,7 +96,7 @@ export class UrlService {
     if (complianceLevel === 'commercial')
       return '/oauth/v2/refresh';
     else // complianceLevel.includes('gov')
-      return '/oauth/v2/token';
+      return '/api/v1/token';
   }
 
   getQueryParams(url: string): {[key: string]: any} {
