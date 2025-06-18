@@ -65,7 +65,7 @@ The below organizes code from multiple different files into coherent sequences o
 
  `(<any> window).api.send("renderer-init-done")` 
 
-### electron/main.js
+### src/electron/main.js
 
 `ipcMain.on("renderer-init-done", function(event) { ipcMain.send("navigate", "/migration-console"); } )`
 
@@ -92,7 +92,7 @@ The below organizes code from multiple different files into coherent sequences o
 
 `(<any> window).api.send("console-init-started")`
 
-### electron/main.js
+### src/electron/main.js
 
 `ipcMain.on("console-init-started", function(event) { ipcMain.send("console-init-finish", redirectUrls); })`
 
